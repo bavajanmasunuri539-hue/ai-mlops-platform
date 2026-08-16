@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.venv/
+.terraform/
+__pycache__/
+*.pyc
+mlruns/
+mlflow.db
+*.tfstate
+*.tfstate.*
+*.pem
+.env
+
+ml/models/*.joblib

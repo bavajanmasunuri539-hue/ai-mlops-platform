@@ -1,0 +1,13 @@
+[
+  {
+    "IpProtocol": "tcp",
+    "FromPort": 22,
+    "ToPort": 22,
+    "IpRanges": [
+      {
+        "CidrIp": "27.6.132.181/32",
+        "Description": "SSH from my current IP"
+      }
+    ]
+  }
+]

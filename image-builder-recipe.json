@@ -1,0 +1,11 @@
+{
+  "name": "customer-churn-api-recipe",
+  "description": "Customer Churn API production image recipe",
+  "semanticVersion": "1.0.0",
+  "parentImage": "ami-0d15e9052c94acb75",
+  "components": [
+    {
+      "componentArn": "arn:aws:imagebuilder:ap-south-1:114403655423:component/customer-churn-docker-runtime/1.0.0/1"
+    }
+  ]
+}

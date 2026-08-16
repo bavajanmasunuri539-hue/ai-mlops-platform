@@ -1,0 +1,23 @@
+{
+    "model": "C:\\Users\\bavaj\\OneDrive\\Desktop\\ai-mlops-platform\\ml\\models\\champion_model.joblib",
+    "target_column": "churn",
+    "optimization_metric": "f1",
+    "optimal_threshold": 0.32,
+    "metrics": {
+        "accuracy": 0.729,
+        "precision": 0.5869,
+        "recall": 0.7359,
+        "f1": 0.653,
+        "roc_auc": 0.8037573240327639
+    },
+    "default_threshold": {
+        "threshold": 0.5,
+        "accuracy": 0.7565,
+        "precision": 0.6965648854961832,
+        "recall": 0.5266955266955267,
+        "f1": 0.599835661462613
+    },
+    "f1_improvement": 0.053164338537387,
+    "test_size": 0.2,
+    "random_state": 42
+}

@@ -1,0 +1,12 @@
+{
+  "name": "customer-churn-distribution",
+  "distributions": [
+    {
+      "region": "ap-south-1",
+      "amiDistributionConfiguration": {
+        "name": "customer-churn-api-{{ imagebuilder:buildDate }}",
+        "description": "Customer Churn API Production AMI"
+      }
+    }
+  ]
+}

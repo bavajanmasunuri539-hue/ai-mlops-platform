@@ -1,0 +1,15 @@
+{
+    "best_parameters": {
+        "classifier__C": 0.1,
+        "classifier__class_weight": null,
+        "classifier__solver": "lbfgs"
+    },
+    "best_cv_roc_auc": 0.8191419382278422,
+    "test_metrics": {
+        "accuracy": 0.7565,
+        "precision": 0.6965648854961832,
+        "recall": 0.5266955266955267,
+        "f1": 0.599835661462613,
+        "roc_auc": 0.8037573240327639
+    }
+}

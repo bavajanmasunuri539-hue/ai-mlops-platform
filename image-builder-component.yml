@@ -1,0 +1,25 @@
+name: customer-churn-docker-runtime
+description: Install Docker and prepare EC2 Image Builder instance to run Customer Churn API from Amazon ECR
+schemaVersion: 1.0
+
+phases:
+  - name: build
+    steps:
+      - name: InstallDocker
+        action: ExecuteBash
+        inputs:
+          commands:
+            - dnf update -y
+            - dnf install -y docker
+            - systemctl enable docker
+            - systemctl start docker
+            - usermod -aG docker ec2-user
+
+  - name: validate
+    steps:
+      - name: ValidateDocker
+        action: ExecuteBash
+        inputs:
+          commands:
+            - docker --version
+            - systemctl is-active docker

@@ -1,0 +1,46 @@
+﻿apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: customer-churn-api-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: customer-churn-api
+      rules:
+        - alert: CustomerChurnAPIHigh5xxErrors
+          expr: sum(rate(http_requests_total{service="customer-churn-api",status=~"5xx"}[5m])) > 0.1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Customer Churn API has high 5xx errors"
+            description: "The API is returning more than 0.1 HTTP 5xx responses per second for 5 minutes."
+
+        - alert: CustomerChurnAPIHighLatency
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service="customer-churn-api"}[5m])) by (le)) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Customer Churn API latency is high"
+            description: "P95 API latency has exceeded 1 second for 5 minutes."
+
+        - alert: CustomerChurnAPIPodsUnavailable
+          expr: sum(kube_pod_status_ready{namespace="default",condition="true",pod=~"customer-churn-api-.*"}) < 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Customer Churn API pods unavailable"
+            description: "No Customer Churn API pods are ready."
+
+        - alert: CustomerChurnAPINoPredictionTraffic
+          expr: sum(rate(http_requests_total{service="customer-churn-api",handler="/predict"}[10m])) == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "No Customer Churn predictions"
+            description: "The /predict endpoint has received no traffic for 15 minutes."

@@ -1,0 +1,81 @@
+{
+  "title": "Customer Churn API Monitoring",
+  "uid": "customer-churn-api",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "title": "API Request Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"customer-churn-api\"}[5m]))",
+          "legendFormat": "requests/sec"
+        }
+      ]
+    },
+    {
+      "title": "HTTP 5xx Error Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"customer-churn-api\",status=~\"5xx\"}[5m]))",
+          "legendFormat": "5xx/sec"
+        }
+      ]
+    },
+    {
+      "title": "P95 Request Latency",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"customer-churn-api\"}[5m])) by (le))",
+          "legendFormat": "P95 latency"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "title": "API Requests by Endpoint",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"customer-churn-api\"}[5m])) by (handler)",
+          "legendFormat": "{{handler}}"
+        }
+      ]
+    },
+    {
+      "title": "API Pods Ready",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{namespace=\"default\",condition=\"true\",pod=~\"customer-churn-api-.*\"})",
+          "legendFormat": "Ready pods"
+        }
+      ]
+    },
+    {
+      "title": "Prediction Endpoint Traffic",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 16, "x": 8, "y": 16},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"customer-churn-api\",handler=\"/predict\"}[5m]))",
+          "legendFormat": "/predict"
+        }
+      ]
+    }
+  ]
+}

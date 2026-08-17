@@ -1,0 +1,154 @@
+name: Customer Churn API CD
+
+on:
+  workflow_run:
+    workflows:
+      - Customer Churn API CI
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: customer-churn-api
+  EKS_CLUSTER_NAME: multi-cloud-devops-platform-prod-eks
+  HELM_RELEASE_NAME: customer-churn-api
+  HELM_NAMESPACE: default
+
+jobs:
+  deploy:
+    name: Build, Push and Deploy
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            .
+
+      - name: Push Docker image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
+      - name: Configure EKS kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name $EKS_CLUSTER_NAME
+
+      - name: Verify EKS connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: latest
+
+      - name: Validate Helm chart
+        run: |
+          helm lint helm/customer-churn-api
+
+      - name: Render Helm templates
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          helm template $HELM_RELEASE_NAME \
+            helm/customer-churn-api \
+            --namespace $HELM_NAMESPACE \
+            --set image.repository=$ECR_REGISTRY/$ECR_REPOSITORY \
+            --set image.tag=$IMAGE_TAG \
+            --set image.pullPolicy=Always
+
+      - name: Deploy application with Helm
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          helm upgrade --install $HELM_RELEASE_NAME \
+            helm/customer-churn-api \
+            --namespace $HELM_NAMESPACE \
+            --set image.repository=$ECR_REGISTRY/$ECR_REPOSITORY \
+            --set image.tag=$IMAGE_TAG \
+            --set image.pullPolicy=Always \
+            --wait \
+            --timeout 5m
+
+      - name: Verify Kubernetes deployment
+        run: |
+          kubectl get deployment customer-churn-api
+          kubectl get pods
+          kubectl get svc
+          kubectl get hpa
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/customer-churn-api \
+            --timeout=5m
+
+      - name: Verify application health
+        run: |
+          kubectl get pods \
+            -l app.kubernetes.io/name=customer-churn-api \
+            -o wide
+
+      - name: Deployment summary
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          echo "=========================================="
+          echo "Customer Churn API Deployment Successful"
+          echo "=========================================="
+          echo "ECR Image:"
+          echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo ""
+          echo "EKS Cluster:"
+          echo "$EKS_CLUSTER_NAME"
+          echo ""
+          echo "Helm Release:"
+          echo "$HELM_RELEASE_NAME"
+          echo ""
+          kubectl get deployment customer-churn-api
+          kubectl get pods
+          kubectl get svc
+          kubectl get hpa

@@ -1,5 +1,4 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
 *.py[codz]
 *$py.class
 
@@ -148,7 +147,6 @@ activemq-data/
 *.sage.py
 
 # Environments
-.env
 .envrc
 .venv
 env/
@@ -216,15 +214,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-.venv/
 .terraform/
-__pycache__/
-*.pyc
 mlruns/
 mlflow.db
 *.tfstate
 *.tfstate.*
 *.pem
-.env
 
 ml/models/*.joblib
+
+# Project secrets and generated artifacts
+.env
+
+
+__pycache__/
+

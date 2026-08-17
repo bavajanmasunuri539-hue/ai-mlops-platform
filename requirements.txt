@@ -11,3 +11,4 @@ uvicorn[standard]
 pydantic
 python-dotenv
 boto3
+prometheus-fastapi-instrumentator==8.1.0
